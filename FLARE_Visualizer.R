@@ -267,10 +267,8 @@ if (opt$`do-parallel`) {
     single_person_visualizer(name)
   }
 } else {
-  index = 1
   for (name in inds) {
     cat(name," : ", match(name,inds),"/",length(inds),"\n")
-    index=index+1
     single_person_visualizer(name)
   }
 }
