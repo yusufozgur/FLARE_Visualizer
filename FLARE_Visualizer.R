@@ -6,9 +6,9 @@
 #TODO: add / to opt$`output-dir` automatically if not added by user
 #### ==== CHECK and LOAD LIBRARIES ==== ####
 
-libs <- c("data.table","tidyverse","optparse","randomcoloR","foreach","doParallel","cli")
+libs <- c("data.table", "tidyverse", "optparse", "randomcoloR", "foreach", "doParallel", "cli")
 
-installed_packages <- installed.packages()[,1]
+installed_packages <- installed.packages()[, 1]
 
 libs_installed <- libs[(libs %in% installed_packages)]
 libs_not_installed <- libs[!(libs %in% installed_packages)]
@@ -16,53 +16,60 @@ libs_not_installed <- libs[!(libs %in% installed_packages)]
 #install and load packages not installed
 for (lib in libs_not_installed) {
 	install.packages(lib)
-	if (!require(lib,character.only = TRUE)) {
+	if (!require(lib, character.only = TRUE)) {
 		stop("Error: could not install new R package:", lib)
 	}
 }
 #load installed packages
 for (lib in libs_installed) {
-	if (!require(lib,character.only = TRUE)) {
+	if (!require(lib, character.only = TRUE)) {
 		stop("Error: could not load existing R package:", lib)
 	}
 }
 
-rm(installed_packages,libs_installed,libs_not_installed)#not libs, used in foreach
+rm(installed_packages, libs_installed, libs_not_installed)#not libs, used in foreach
 #### ==== PARSE ARGUMENTS ==== ####
 
 option_list = list(
-	make_option(c("-i", "--input-file"),
-		type="character",
-		default=NULL,
-		help="path of the ancestry file produced by FLARE. it can either be a vcf file or vcf.gz file.",
-		metavar="PATH"),
-
-	make_option(c("-d", "--do-parallel"), type="character",
-		default=FALSE,
-		action="store_true",
-		help="Perform parallel computing for faster processing. Turned off by default"
+	make_option(
+		c("-i", "--input-file"),
+		type = "character",
+		default = NULL,
+		help = "path of the ancestry file produced by FLARE. it can either be a vcf file or vcf.gz file.",
+		metavar = "PATH"
 	),
 
-	make_option(c("-o", "--output-dir"),
-		type="character",
-		default=NULL,
-		help="path of the output directory",
-		metavar = "PATH")
-);
+	make_option(
+		c("-d", "--do-parallel"),
+		type = "character",
+		default = FALSE,
+		action = "store_true",
+		help = "Perform parallel computing for faster processing. Turned off by default"
+	),
 
-opt_parser = OptionParser(option_list=option_list);
+	make_option(
+		c("-o", "--output-dir"),
+		type = "character",
+		default = NULL,
+		help = "path of the output directory",
+		metavar = "PATH"
+	)
+)
+
+
+opt_parser = OptionParser(option_list = option_list)
 opt = parse_args(opt_parser)
 
-if (is.null(opt$`input-file`)){
+if (is.null(opt$`input-file`)) {
 	print_help(opt_parser)
-	stop("Error: --input-file argument should be given", call.=FALSE)
+	stop("Error: --input-file argument should be given", call. = FALSE)
 }
-if (is.null(opt$`output-dir`)){
+if (is.null(opt$`output-dir`)) {
 	print_help(opt_parser)
-	stop("Error: --output-dir argument should be given", call.=FALSE)
+	stop("Error: --output-dir argument should be given", call. = FALSE)
 }
 if (!dir.exists(opt$`output-dir`)) {
-	cli_inform(paste("Output directory does not exist, creating it:",opt$`output-dir`))
+	cli_inform(paste("Output directory does not exist, creating it:", opt$`output-dir`))
 	dir.create(opt$`output-dir`)
 }
 admixture_proportions_table_path <- paste(opt$`output-dir`,"/admixture_proportions.tsv",sep="")
@@ -104,7 +111,7 @@ inds <- read_lines(file = opt$`input-file`, n_max = 50) |>
 	str_extract("#CHROM.*") |>
 	na.omit() |>
 	strsplit(split = "\t") |>
-	(\(x) x[[1]][10:length(x)-10])() |> # remove first 9 columns, which are the fixed columns
+	(\(x) x[[1]][10:length(x) - 10])() |> # remove first 9 columns, which are the fixed columns
 	sort()
 
 #### ==== functions: visualization for a single person ==== ####
@@ -114,15 +121,15 @@ inds <- read_lines(file = opt$`input-file`, n_max = 50) |>
 # individual only, and running this function in a loop proved to be better for
 # performance.
 
-pop_id_to_pop_name <- function(id,ref_table) {
-	lookup <- match(id,ref_table$id)
+pop_id_to_pop_name <- function(id, ref_table) {
+	lookup <- match(id, ref_table$id)
 	return(ref_table$name[lookup])
 }
 
-process_base_data <- function(base_data){
+process_base_data <- function(base_data) {
 	base_data <- base_data |>
-		rename(CHROM=`#CHROM`) |>
-		select(-ID,  -REF,  -ALT,  -QUAL,  -FILTER,  -INFO,  -FORMAT)
+		rename(CHROM = `#CHROM`) |>
+		select(-ID, -REF, -ALT, -QUAL, -FILTER, -INFO, -FORMAT)
 
 	ind_cols <- colnames(base_data)[3:ncol(base_data)]
 
@@ -136,25 +143,25 @@ process_base_data <- function(base_data){
 	colon_times <- str_count(base_data$inferred_ancestry[1], ":")
 
 	if (colon_times == 2) {
-		cat("Colons count is ", colon_times,". probs=False option detected.\n")
+		cat("Colons count is ", colon_times, ". probs=False option detected.\n")
 		base_data$inferred_ancestry <-
 			base_data$inferred_ancestry |>
-			lapply(\(x) str_extract(as.character(x),"\\d+:\\d+$"))
-	} else if (colon_times == 4){
-		cat("Colons count is ", colon_times,". probs=True option detected.\n")
+			lapply(\(x) str_extract(as.character(x), "\\d+:\\d+$"))
+	} else if (colon_times == 4) {
+		cat("Colons count is ", colon_times, ". probs=True option detected.\n")
 		base_data$inferred_ancestry <-
 			base_data$inferred_ancestry |>
 			lapply(\(x) str_extract(as.character(x), "\\d+\\|\\d+:\\d+:\\d+")) |>
 			lapply(\(x) str_extract(as.character(x), "\\d+:\\d+$"))
 	} else {
-		cat("Colons count is ", colon_times,". Data seems to be in an incorrect format.\n")
+		cat("Colons count is ", colon_times, ". Data seems to be in an incorrect format.\n")
 		stop()
 	}
 
 	return(as.data.frame(base_data))
 }
 
-create_admixture_proportions_table <- function(processed_data){
+create_admixture_proportions_table <- function(processed_data) {
 	processed_data <- processed_data |>
 		separate_longer_delim(cols = inferred_ancestry, delim = ":") |>
 		count(person, inferred_ancestry, name = "counts") |>
@@ -204,11 +211,12 @@ prepare_data_for_tagore_inputfiles <- function(processed_data) {
 }
 
 single_person_visualizer <- function(person_name) {
-
 	cli_inform("Reading file")
-	base_data <- fread(file = opt$`input-file`,
+	base_data <- fread(
+		file = opt$`input-file`,
 		skip = "#CHROM",
-		select = c("#CHROM","POS","ID","REF","ALT","QUAL","FILTER","INFO","FORMAT",person_name))
+		select = c("#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", person_name)
+	)
 
 	cli_inform("Processing file")
 	base_data <- process_base_data(base_data)
@@ -221,33 +229,43 @@ single_person_visualizer <- function(person_name) {
 
 	for (ancestry in ancestries_and_colors$name) {
 		if (!(ancestry %in% colnames(admixture_proportions_table))) {
-			admixture_proportions_table[ancestry]=0
+			admixture_proportions_table[ancestry] = 0
 		}
 	}
 	#reorder rows so append will be right
-	admixture_proportions_table <- admixture_proportions_table[,c("person",
-		sort(colnames(admixture_proportions_table)[-1]))]
+	ordered_columns <-
+		c("person", (colnames(admixture_proportions_table)[-1] |> sort()))
+	admixture_proportions_table <-
+		admixture_proportions_table[, ordered_columns]
 
 
 	cli_inform("Writing admixture proportions table")
-	fwrite(admixture_proportions_table,
+	fwrite(
+		admixture_proportions_table,
 		file = admixture_proportions_table_path,
 		sep = "\t",
-		append = T)
+		append = T
+	)
 
 	cli_inform("Writing tagore file")
 
 	tagore_inputfile <- prepare_data_for_tagore_inputfiles(base_data)
-	tagore_inputfile_path <- paste(opt$`output-dir`,
+
+	tagore_inputfile_path <- paste(
+		opt$`output-dir`,
 		"/",
 		person_name,
 		".tagorefile",
-		sep="")
-	fwrite(tagore_inputfile,
+		sep = ""
+	)
+
+	fwrite(
+		tagore_inputfile,
 		file = tagore_inputfile_path,
 		sep = "\t",
 		col.names = F,
-		row.names = F)
+		row.names = F
+	)
 
 	print("Executing tagore")
 
@@ -257,28 +275,36 @@ single_person_visualizer <- function(person_name) {
 		(\(x) x$merge)() |>
 		paste(collapse = ",")
 
-	print(paste("tagore --input ",
+	paste(
+		"tagore --input ",
 		tagore_inputfile_path,
-		" --prefix tagore_images/",person_name," -vf -b hg38 ",
-		"-l ","'",tagore_legend,"'",sep=""))
+		" --prefix tagore_images/",
+		person_name,
+		" -vf -b hg38 ",
+		"-l ",
+		"'",
+		tagore_legend,
+		"'",
+		sep = ""
+	) |> print()
 }
 
 #### ==== Main LOOP ==== ####
 #either run the single person visualization in parallel for a performance boost, or run it in a single process
 if (opt$`do-parallel`) {
-	registerDoParallel(cores=detectCores())
-	foreach (name=inds) %dopar% {
+	registerDoParallel(cores = detectCores())
+	foreach (name = inds) %dopar% {
 		#load libs again
 		for (lib in libs) {
-			require(lib,character.only = T)
+			require(lib, character.only = T)
 		}
 
-		cat(name," : ", match(name,inds),"/",length(inds),"\n")
+		cat(name, " : ", match(name, inds), "/", length(inds), "\n")
 		single_person_visualizer(name)
 	}
 } else {
 	for (name in inds) {
-		cat(name," : ", match(name,inds),"/",length(inds),"\n")
+		cat(name, " : ", match(name, inds), "/", length(inds), "\n")
 		single_person_visualizer(name)
 	}
 }
