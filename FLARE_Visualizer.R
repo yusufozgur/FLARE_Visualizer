@@ -176,28 +176,31 @@ create_admixture_proportions_table <- function(processed_data){
 		as.data.frame() |>
 		mutate_all(.funs = \(x) replace_na(x, 0))
 }
+
 prepare_data_for_tagore_inputfiles <- function(processed_data) {
-
-	processed_data <- processed_data %>%
-		separate_wider_delim(cols = inferred_ancestry,delim = ":",names = c("h1","h2")) %>%
-		mutate(CHROM = paste("chr",CHROM,sep=""),
-			POS2=POS,
+	processed_data |>
+		separate_wider_delim(
+			cols = inferred_ancestry,
+			delim = ":",
+			names = c("h1", "h2")
+		) |>
+		mutate(
+			CHROM = paste("chr", CHROM, sep = ""),
+			POS2 = POS,
 			feature = tagore_feature,
-			size= tagore_size,
+			size = tagore_size,
 			h1 = as.numeric(h1),
-			h2 = as.numeric(h2)) %>%
-		pivot_longer(cols = all_of(c("h1","h2")),
+			h2 = as.numeric(h2)
+		) |>
+		pivot_longer(
+			cols = all_of(c("h1", "h2")),
 			names_to = "chr_copy",
-			values_to = "color") %>%
-		mutate(chr_copy = str_sub(chr_copy,start=-1,end=-1))
-
-	processed_data <- processed_data %>%
-		mutate(color = ancestries_and_colors$color[match(color,ancestries_and_colors$id)]) %>%
-		relocate(CHROM,POS,POS2,feature,size,color,chr_copy)
-	#if single person, which is always true for this program
-	processed_data <- processed_data %>%
-		select(-person)
-	return(processed_data)
+			values_to = "color"
+		) |>
+		mutate(chr_copy = str_sub(chr_copy, start = -1, end = -1)) |>
+		mutate(color = ancestries_and_colors$color[match(color, ancestries_and_colors$id)]) |>
+		relocate(CHROM, POS, POS2, feature, size, color, chr_copy) |>
+		select(-person) #if single person, which is always true for this program
 }
 
 single_person_visualizer <- function(person_name) {
