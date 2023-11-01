@@ -97,17 +97,13 @@ ancestries_and_colors <-
 ancestries_and_colors$color <- distinctColorPalette(nrow(ancestries_and_colors))
 
 #### ==== Extract tested individuals ==== ####
-inds <-  read_lines(
-	file = opt$`input-file`,
-	n_max = 50)
+inds <- read_lines(file = opt$`input-file`, n_max = 50) |>
+	str_extract("#CHROM.*") |>
+	na.omit() |>
+	strsplit(split = "\t") |>
+	(\(x) x[[1]][10:length(x)-10])() |> # remove first 9 columns, which are the fixed columns
+	sort()
 
-inds <- na.omit(str_extract(inds,"#CHROM.*"))
-
-inds <- strsplit(inds,split = "\t")
-
-inds <- inds[[1]][10:length(inds)-10] # remove first 9 columns, which are the fixed columns
-
-inds <- sort(inds)
 #### ==== functions: visualization for a single person ==== ####
 #loading the whole FLARE output, which can be in magnitude of gigabytes, and processing that can require too much ram, instead, creating a function to only load data for the designated individual and visualize chromosomes of that individual only, and running this function in a loop proved to be better for performance.
 
