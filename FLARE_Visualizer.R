@@ -75,22 +75,23 @@ tagore_size = 1
 #### ==== Extract Ancestries and assign distinct colors ==== ####
 
 #extract ancestries with their respective ids from vcf metadata
-ancestries_and_colors <- read_lines(
-	file = opt$`input-file`,
-	n_max = 50,
-)
-ancestries_and_colors <- str_extract(ancestries_and_colors,"##ANCESTRY.*>")
-ancestries_and_colors <- na.omit(ancestries_and_colors)
-ancestries_and_colors <- tail(ancestries_and_colors,n=1)
-ancestries_and_colors <- str_extract(ancestries_and_colors,"<(.*)>")
-ancestries_and_colors <- gsub("[<>]","",ancestries_and_colors)
-ancestries_and_colors <- strsplit(ancestries_and_colors,",")[[1]]
-ancestries_and_colors <- as.data.frame(ancestries_and_colors) %>%
-	separate_wider_delim(ancestries_and_colors,
-		delim="=",
-		names=c("name","id")) %>%
-	as.data.frame() %>%
-	mutate(id=as.numeric(id))
+ancestries_and_colors <-
+	read_lines(file = opt$`input-file`, n_max = 50) |>
+	str_extract("##ANCESTRY.*>") |>
+	na.omit() |>
+	tail(n = 1) |>
+	str_extract("<(.*)>") |>
+	(\(x) gsub("[<>]", "", x))() |>
+	strsplit(",") |>
+	(\(x) x[[1]])() |>
+	(\(x) separate_wider_delim(
+		as.data.frame(x),
+		x,
+		delim = "=",
+		names = c("name", "id")
+	))() |>
+	as.data.frame() |>
+	mutate(id = as.numeric(id))
 
 #assign unique colors to each ancestry
 ancestries_and_colors$color <- distinctColorPalette(nrow(ancestries_and_colors))
