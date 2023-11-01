@@ -120,32 +120,37 @@ pop_id_to_pop_name <- function(id,ref_table) {
 }
 
 process_base_data <- function(base_data){
-	base_data <- base_data %>%
-		rename(CHROM=`#CHROM`) %>%
+	base_data <- base_data |>
+		rename(CHROM=`#CHROM`) |>
 		select(-ID,  -REF,  -ALT,  -QUAL,  -FILTER,  -INFO,  -FORMAT)
 
 	ind_cols <- colnames(base_data)[3:ncol(base_data)]
 
-	base_data <- base_data %>%
-		pivot_longer(cols = all_of(ind_cols),
+	base_data <- base_data |>
+		pivot_longer(
+			cols = all_of(ind_cols),
 			names_to = "person",
-			values_to = "inferred_ancestry")
+			values_to = "inferred_ancestry"
+		)
 
-	colon_times <- str_count(base_data$inferred_ancestry[1],":")
+	colon_times <- str_count(base_data$inferred_ancestry[1], ":")
+
 	if (colon_times == 2) {
 		cat("Colons count is ", colon_times,". probs=False option detected.\n")
-		base_data$inferred_ancestry <- lapply(base_data$inferred_ancestry,
-			function(x) str_extract(as.character(x),"\\d+:\\d+$"))
+		base_data$inferred_ancestry <-
+			base_data$inferred_ancestry |>
+			lapply(\(x) str_extract(as.character(x),"\\d+:\\d+$"))
 	} else if (colon_times == 4){
 		cat("Colons count is ", colon_times,". probs=True option detected.\n")
-		base_data$inferred_ancestry <- lapply(base_data$inferred_ancestry,
-			function(x) str_extract(as.character(x),"\\d+\\|\\d+:\\d+:\\d+"))
-		base_data$inferred_ancestry <- lapply(base_data$inferred_ancestry,
-			function(x) str_extract(as.character(x),"\\d+:\\d+$"))
+		base_data$inferred_ancestry <-
+			base_data$inferred_ancestry |>
+			lapply(\(x) str_extract(as.character(x), "\\d+\\|\\d+:\\d+:\\d+")) |>
+			lapply(\(x) str_extract(as.character(x), "\\d+:\\d+$"))
 	} else {
 		cat("Colons count is ", colon_times,". Data seems to be in an incorrect format.\n")
 		stop()
 	}
+
 	return(as.data.frame(base_data))
 }
 
