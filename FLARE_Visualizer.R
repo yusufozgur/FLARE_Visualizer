@@ -1,5 +1,8 @@
 #TODO: consider not including parallel and foreach packages to package load if this option FALSE
-#TODO: instead of read_line arbitrary 50 lines and getting populations and tested individuals from that text, get metadata and headers, which are lines starting with ## and # respectively and extract populations and individuals that way
+#TODO: instead of read_line arbitrary 50 lines and getting populations and
+#      tested individuals from that text, get metadata and headers, which are lines
+#      starting with ## and # respectively and extract populations and individuals
+#      that way
 #TODO: add / to opt$`output-dir` automatically if not added by user
 #### ==== CHECK and LOAD LIBRARIES ==== ####
 
@@ -105,7 +108,11 @@ inds <- read_lines(file = opt$`input-file`, n_max = 50) |>
 	sort()
 
 #### ==== functions: visualization for a single person ==== ####
-#loading the whole FLARE output, which can be in magnitude of gigabytes, and processing that can require too much ram, instead, creating a function to only load data for the designated individual and visualize chromosomes of that individual only, and running this function in a loop proved to be better for performance.
+# loading the whole FLARE output, which can be in magnitude of gigabytes, and
+# processing that can require too much ram, instead, creating a function to only
+# load data for the designated individual and visualize chromosomes of that
+# individual only, and running this function in a loop proved to be better for
+# performance.
 
 pop_id_to_pop_name <- function(id,ref_table) {
 	lookup <- match(id,ref_table$id)
