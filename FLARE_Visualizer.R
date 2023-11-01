@@ -72,7 +72,8 @@ if (!dir.exists(opt$`output-dir`)) {
 	cli_inform(paste("Output directory does not exist, creating it:", opt$`output-dir`))
 	dir.create(opt$`output-dir`)
 }
-admixture_proportions_table_path <- paste(opt$`output-dir`,"/admixture_proportions.tsv",sep="")
+#TODO: sep should use platform appropriate path separator
+admixture_proportions_table_path <- paste(opt$`output-dir`, "admixture_proportions.tsv", sep = "/")
 if (file.exists(admixture_proportions_table_path)) {
 	cli_inform("admixture_proportions.tsv already exists in the output dir, deleting it")
 	unlink(admixture_proportions_table_path)
@@ -104,7 +105,7 @@ ancestries_and_colors <-
 	mutate(id = as.numeric(id))
 
 #assign unique colors to each ancestry
-ancestries_and_colors$color <- distinctColorPalette(nrow(ancestries_and_colors))
+ancestries_and_colors$color <- ancestries_and_colors |> nrow() |> distinctColorPalette()
 
 #### ==== Extract tested individuals ==== ####
 inds <- read_lines(file = opt$`input-file`, n_max = 50) |>
