@@ -155,27 +155,26 @@ process_base_data <- function(base_data){
 }
 
 create_admixture_proportions_table <- function(processed_data){
-	processed_data <- processed_data %>%
-		separate_longer_delim(cols=inferred_ancestry,
-			delim = ":") %>%
-		count(person,inferred_ancestry,name = "counts") %>%
-		mutate(inferred_ancestry = pop_id_to_pop_name(inferred_ancestry,ancestries_and_colors))
+	processed_data <- processed_data |>
+		separate_longer_delim(cols = inferred_ancestry, delim = ":") |>
+		count(person, inferred_ancestry, name = "counts") |>
+		mutate(inferred_ancestry = pop_id_to_pop_name(inferred_ancestry, ancestries_and_colors))
 
-	total_count_each_person = select(processed_data,person,counts) %>%
-		group_by(person) %>%
+	total_count_each_person = select(processed_data, person, counts) |>
+		group_by(person) |>
 		summarise(total_counts = sum(counts))
 
-	processed_data <- processed_data %>%
-		mutate(proportions = counts / total_count_each_person$total_counts[match(person,total_count_each_person$person)])
+	processed_data <- processed_data |>
+		mutate(proportions = counts / total_count_each_person$total_counts[match(person, total_count_each_person$person)])
 
-	processed_data <- processed_data %>%
-		pivot_wider(id_cols = c(person),
+	processed_data |>
+		pivot_wider(
+			id_cols = c(person),
 			names_from = c(inferred_ancestry),
-			values_from = proportions) %>%
-		as.data.frame() %>%
-		mutate_all(.funs = function(x) replace_na(x,0))
-
-	return(processed_data)
+			values_from = proportions
+		) |>
+		as.data.frame() |>
+		mutate_all(.funs = \(x) replace_na(x, 0))
 }
 prepare_data_for_tagore_inputfiles <- function(processed_data) {
 
