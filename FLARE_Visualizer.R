@@ -59,7 +59,7 @@ if (is.null(opt$`input-file`)){
 }
 if (is.null(opt$`output-dir`)){
 	print_help(opt_parser)
-	stop("Error: --output argument should be given", call.=FALSE)
+	stop("Error: --output-dir argument should be given", call.=FALSE)
 }
 if (!dir.exists(opt$`output-dir`)) {
 	cli_inform(paste("Output directory does not exist, creating it:",opt$`output-dir`))
