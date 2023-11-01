@@ -251,11 +251,11 @@ single_person_visualizer <- function(person_name) {
 
 	print("Executing tagore")
 
-	tagore_legend <- ancestries_and_colors %>%
-		filter(name %in% nonzero_ancestries) %>%
-		mutate(merge = paste(name,color,sep=":"))
-	tagore_legend <- tagore_legend$merge
-	tagore_legend <- paste(tagore_legend,collapse = ",")
+	tagore_legend <- ancestries_and_colors |>
+		filter(name %in% nonzero_ancestries) |>
+		mutate(merge = paste(name, color, sep = ":")) |>
+		(\(x) x$merge)() |>
+		paste(collapse = ",")
 
 	print(paste("tagore --input ",
 		tagore_inputfile_path,
